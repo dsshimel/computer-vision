@@ -12,7 +12,7 @@ def diff_img(frame0, frame1, frame2):
 # Use "binary" return values to improve contour detection
 def threshold_max(x):
   # This function could be replaced with cv2.threshold()
-  return 1 if x > 31 else 0
+  return 1 if x > 15 else 0
 
 def convert_to_bw(im):
   return cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
@@ -24,6 +24,14 @@ def read_camera(capture, as_bw):
   return convert_to_bw(result) if as_bw else result  
 
 capture = cv2.VideoCapture(0)
+if not capture.isOpened():
+  capture = cv2.VideoCapture(1)
+if not capture.isOpened():
+  print('Could not open camera on channel 0 or 1')
+  exit()
+
+capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1920);
+capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080);
 
 # Example of what is read from the camera
 # 'image' is a np.ndarray
@@ -44,15 +52,16 @@ try:
     result = diff_img(t_minus2, t_minus1, t)
     k_size = (3, 3)
     result_blur = cv2.blur(result, k_size)
-    vector_func = np.vectorize(threshold_max, otypes=[np.uint8])
+    # vector_func = np.vectorize(threshold_max, otypes=[np.uint8])
+    did_thresh, threshold_result = cv2.threshold(result_blur, 31, 1, cv2.THRESH_BINARY)
     
     # transformed_result is only of length 2
     # nested arrays are length 640 
-    transformed_result = vector_func(result_blur)
+    # transformed_result = vector_func(result_blur)
 
     # Calculate the x and y moments
     # This point is what the eye will look at
-    moms = cv2.moments(transformed_result)
+    moms = cv2.moments(threshold_result)
     m0 = moms['m00']
     m_x, m_y = None, None
     if m0 > 0:
@@ -60,7 +69,7 @@ try:
       m_y = int(moms['m01'] / m0)
       # print(str(m_x) + ', ' + str(m_y))
 
-    im2, contours, hierarchy = cv2.findContours(transformed_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    im2, contours, hierarchy = cv2.findContours(threshold_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(t_color, contours, -1, (0, 255, 0), 1)
 
     if m_x and m_y:
