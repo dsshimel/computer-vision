@@ -1,4 +1,5 @@
 import cv2
+import json
 import numpy as np
 import time
 import traceback
@@ -6,7 +7,8 @@ import traceback
 # Based on http://www.steinm.com/blog/motion-detection-webcam-python-opencv-differential-images/
 
 class MotionDetector:
-  def __init__(self):
+  def __init__(self, socket):
+    self.socket = socket
     self.m_x = None
     self.m_y = None
     self.height = None
@@ -24,7 +26,11 @@ class MotionDetector:
     ret, result = capture.read()
     if not ret:
       return None
-    return MotionDetector.convert_to_bw(result) if as_bw else result  
+    return MotionDetector.convert_to_bw(result) if as_bw else result
+
+  def send_message(self, json_object):
+    if self.socket:
+      self.socket.sendMessage(json.dumps(json_object))
 
   def run(self):
     capture = cv2.VideoCapture(0)
@@ -41,6 +47,7 @@ class MotionDetector:
     # 'image' is a np.ndarray
     ret, image = capture.read()
     self.height, self.width, channels = image.shape
+    self.send_message({'height': self.height, 'width': self.width})
     print('height: ' + str(self.height))
     print('width: ' + str(self.width))
     print('channels: ' + str(channels))
@@ -81,6 +88,8 @@ class MotionDetector:
         if self.m_x and self.m_y:
           cv2.circle(t_color, (self.m_x, self.m_y), 10, (0, 0, 255), 1)
 
+        self.send_message({'m_x': self.m_x, 'm_y': self.m_y})
+
         cv2.imshow('Camera stream', t_color)
 
         t_minus2 = t_minus1
@@ -105,4 +114,5 @@ class MotionDetector:
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-  run()
+  md = MotionDetector(None)
+  md.run()
