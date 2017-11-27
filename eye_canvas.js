@@ -63,7 +63,8 @@ ws.onmessage = function(event) {
 };
 
 var draw = function() {
-  context.clearRect(0, 0, windowWidth, windowHeight);
+  context.fillStyle = 'black';
+  context.fillRect(0, 0, windowWidth, windowHeight);
   if (!!x && !!y) {
     drawCircle(context, (x + x0) / 2, (y + y0) / 2);
   }
