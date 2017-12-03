@@ -30,7 +30,8 @@ class MotionDetector:
 
   def send_message(self, json_object):
     if self.socket:
-      self.socket.sendMessage(json.dumps(json_object))
+      message = unicode(json.dumps(json_object))
+      self.socket.sendMessage(message)
 
   def run(self):
     capture = cv2.VideoCapture(0)

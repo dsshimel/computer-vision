@@ -32,11 +32,6 @@ var mapSquareToCircle = function(x, y) {
       y * Math.sqrt(1 - Math.pow(x, 2) / 2)]
 };
 
-var feedHeight = null;
-var feedWidth = null;
-var canvasFeedWidthRatio = null;
-var canvasFeedHeightRatio = null;
-
 ws.onopen = function() {
   console.log('connection opened');
 };
@@ -44,6 +39,11 @@ ws.onopen = function() {
 ws.onclose = function() {
   console.log('connection closed');
 };
+
+var feedHeight = null;
+var feedWidth = null;
+var canvasFeedWidthRatio = null;
+var canvasFeedHeightRatio = null;
 
 var x0 = windowWidth / 2;
 var y0 = windowHeight / 2;
@@ -53,18 +53,19 @@ var y = y0;
 /** Handles a message from the web socket. */
 ws.onmessage = function(event) {
   var data = JSON.parse(event.data);
-  if(!feedHeight && !feedWidth) {
-    feedHeight = parseInt(data['height']);
-    feedWidth = parseInt(data['width']);
-    console.log('height: ' + feedHeight + ', width: ' + feedWidth);
+
+  if (data.width && data.height) {
+    feedHeight = parseInt(data.height);
+    feedWidth = parseInt(data.width);
     canvasFeedWidthRatio = windowWidth / feedWidth;
     canvasFeedHeightRatio = windowHeight / feedHeight;
+    console.log('height: ' + feedHeight + ', width: ' + feedWidth);
   } else {
     x0 = x;
     y0 = y;
 
-    var mX = data['m_x'] || feedWidth / 2;
-    var mY = data['m_y'] || feedHeight / 2;
+    var mX = data.m_x || feedWidth / 2;
+    var mY = data.m_y || feedHeight / 2;
 
     x = (mX * canvasFeedWidthRatio);
     y = (mY * canvasFeedHeightRatio);
