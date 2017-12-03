@@ -80,7 +80,7 @@ ws.onmessage = function(event) {
   var y = yHistory[historyLength - 1];
   if (!!mX && !!mY) {
     // Mirror the feed. May not need this depending on setup
-    // mX = feedWidth - mX;
+    mX = feedWidth - mX;
     x = (mX * canvasFeedWidthRatio + x) / 2;
     y = (mY * canvasFeedHeightRatio + y) / 2;
   }
