@@ -6,6 +6,14 @@ import traceback
 
 # Based on http://www.steinm.com/blog/motion-detection-webcam-python-opencv-differential-images/
 
+def diff_img(frame0, frame1, frame2):
+  diff0 = cv2.absdiff(frame0, frame1)
+  diff1 = cv2.absdiff(frame1, frame2)
+  return cv2.bitwise_and(diff0, diff1)
+
+def convert_to_bw(im):
+  return cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+
 class MotionDetector:
   def __init__(self, socket):
     self.socket = socket
@@ -14,19 +22,11 @@ class MotionDetector:
     self.height = None
     self.width = None
 
-  def diff_img(frame0, frame1, frame2):
-    diff0 = cv2.absdiff(frame0, frame1)
-    diff1 = cv2.absdiff(frame1, frame2)
-    return cv2.bitwise_and(diff0, diff1)
-
-  def convert_to_bw(im):
-    return cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
-
-  def read_camera(capture, as_bw):
+  def read_camera(self, capture, as_bw):
     ret, result = capture.read()
     if not ret:
       return None
-    return MotionDetector.convert_to_bw(result) if as_bw else result
+    return convert_to_bw(result) if as_bw else result
 
   def send_message(self, json_object):
     if self.socket:
@@ -46,6 +46,11 @@ class MotionDetector:
     # Example of what is read from the camera
     # 'image' is a np.ndarray
     ret, image = capture.read()
+
+    image = None
+    while image is None:
+      ret, image = capture.read()
+
     self.height, self.width, channels = image.shape
     self.send_message({'height': self.height, 'width': self.width})
     print('height: ' + str(self.height))
@@ -53,22 +58,22 @@ class MotionDetector:
     print('channels: ' + str(channels))
     print('image cell value data type: ' + str(image[0][0].dtype))
 
-    t_minus2 = MotionDetector.read_camera(capture, as_bw=True)
-    t_minus1 = MotionDetector.read_camera(capture, as_bw=True)
-    t_color = MotionDetector.read_camera(capture, as_bw=False)
-    t = MotionDetector.convert_to_bw(t_color)
+    t_minus2 = self.read_camera(capture, as_bw=True)
+    t_minus1 = self.read_camera(capture, as_bw=True)
+    t_color = self.read_camera(capture, as_bw=False)
+    t = convert_to_bw(t_color)
 
     frame_count = 0
     second_start = time.time()
     try:
       while True:
-        result = MotionDetector.diff_img(t_minus2, t_minus1, t)
+        result = diff_img(t_minus2, t_minus1, t)
         k_size = (3, 3)
         result_blur = cv2.blur(result, k_size)
         did_thresh, threshold_result = cv2.threshold(result_blur, 31, 1, cv2.THRESH_BINARY)
-        
+
         # transformed_result is only of length 2
-        # nested arrays are length 640 
+        # nested arrays are length 640
         # transformed_result = vector_func(result_blur)
 
         # Calculate the x and y moments
@@ -88,14 +93,15 @@ class MotionDetector:
         if self.m_x and self.m_y:
           cv2.circle(t_color, (self.m_x, self.m_y), 10, (0, 0, 255), 1)
 
+        print('sending message:', self.m_x, self.m_y)
         self.send_message({'m_x': self.m_x, 'm_y': self.m_y})
 
         cv2.imshow('Camera stream', t_color)
 
         t_minus2 = t_minus1
         t_minus1 = t
-        t_color = MotionDetector.read_camera(capture, as_bw=False)
-        t = MotionDetector.convert_to_bw(t_color)
+        t_color = self.read_camera(capture, as_bw=False)
+        t = convert_to_bw(t_color)
 
         # Poll at 1 ms rate for keys to stop loop
         if cv2.waitKey(1) & 0xFF == ord('q'):

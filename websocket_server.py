@@ -3,6 +3,7 @@ from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 import threading
 import time
 
+# SimpleWebSocketServer: https://github.com/dpallot/simple-websocket-server
 # based on https://www.smashingmagazine.com/2016/02/simple-augmented-reality-with-opencv-a-three-js/#3-websockets-in-both-front-end-and-back-end
 
 client = None
