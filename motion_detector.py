@@ -1,3 +1,4 @@
+from builtins import str
 import cv2
 import json
 import numpy as np
@@ -30,7 +31,7 @@ class MotionDetector:
 
   def send_message(self, json_object):
     if self.socket:
-      message = unicode(json.dumps(json_object))
+      message = str(json.dumps(json_object))
       self.socket.sendMessage(message)
 
   def run(self):
