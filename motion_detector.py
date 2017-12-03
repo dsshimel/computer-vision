@@ -68,14 +68,11 @@ class MotionDetector:
     second_start = time.time()
     try:
       while True:
-        result = diff_img(t_minus2, t_minus1, t)
+        diff_result = diff_img(t_minus2, t_minus1, t)
         k_size = (3, 3)
-        result_blur = cv2.blur(result, k_size)
-        did_thresh, threshold_result = cv2.threshold(result_blur, 31, 1, cv2.THRESH_BINARY)
-
-        # transformed_result is only of length 2
-        # nested arrays are length 640
-        # transformed_result = vector_func(result_blur)
+        blur_result = cv2.blur(diff_result, k_size)
+        did_thresh, threshold_result = cv2.threshold(
+            blur_result, thresh=31, maxval=1, type=cv2.THRESH_BINARY)
 
         # Calculate the x and y moments
         # This point is what the eye will look at
@@ -88,7 +85,9 @@ class MotionDetector:
           self.m_x = None
           self.m_y = None
 
-        im2, contours, hierarchy = cv2.findContours(threshold_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # Draw the areas where motion was detected
+        im2, contours, hierarchy = cv2.findContours(
+            threshold_result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(t_color, contours, -1, (0, 255, 0), 1)
 
         if self.m_x and self.m_y:
