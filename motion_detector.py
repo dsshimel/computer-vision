@@ -30,7 +30,8 @@ class MotionDetector:
 
   def send_message(self, json_object):
     if self.socket:
-      self.socket.sendMessage(json.dumps(json_object))
+      message = unicode(json.dumps(json_object))
+      self.socket.sendMessage(message)
 
   def run(self):
     capture = cv2.VideoCapture(0)
@@ -93,7 +94,6 @@ class MotionDetector:
         if self.m_x and self.m_y:
           cv2.circle(t_color, (self.m_x, self.m_y), 10, (0, 0, 255), 1)
 
-        print('sending message:', self.m_x, self.m_y)
         self.send_message({'m_x': self.m_x, 'm_y': self.m_y})
 
         cv2.imshow('Camera stream', t_color)

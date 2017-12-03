@@ -17,11 +17,6 @@ var drawCircle = function(context, x, y) {
   context.stroke();
 };
 
-var feedHeight = null;
-var feedWidth = null;
-var canvasFeedWidthRatio = null;
-var canvasFeedHeightRatio = null;
-
 ws.onopen = function() {
   console.log('connection opened');
 };
@@ -30,6 +25,11 @@ ws.onclose = function() {
   console.log('connection closed');
 };
 
+var feedHeight = null;
+var feedWidth = null;
+var canvasFeedWidthRatio = null;
+var canvasFeedHeightRatio = null;
+
 var x0 = windowWidth / 2;
 var y0 = windowHeight / 2;
 var x = x0;
@@ -37,18 +37,19 @@ var y = y0;
 
 ws.onmessage = function(event) {
   var data = JSON.parse(event.data);
-  if(!feedHeight && !feedWidth) {
-    feedHeight = parseInt(data['height']);
-    feedWidth = parseInt(data['width']);
-    console.log('height: ' + feedHeight + ', width: ' + feedWidth);
+
+  if (data.width && data.height) {
+    feedHeight = parseInt(data.height);
+    feedWidth = parseInt(data.width);
     canvasFeedWidthRatio = windowWidth / feedWidth;
     canvasFeedHeightRatio = windowHeight / feedHeight;
+    console.log('height: ' + feedHeight + ', width: ' + feedWidth);
   } else {
     x0 = x;
     y0 = y;
 
-    var mX = data['m_x'];
-    var mY = data['m_y'];
+    var mX = data.m_x;
+    var mY = data.m_y;
 
     if (!mX || !mY) {
       x = windowWidth / 2;
