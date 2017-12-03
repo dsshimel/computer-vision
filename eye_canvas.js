@@ -45,32 +45,52 @@ var feedWidth = null;
 var canvasFeedWidthRatio = null;
 var canvasFeedHeightRatio = null;
 
-var x0 = windowWidth / 2;
-var y0 = windowHeight / 2;
-var x = x0;
-var y = y0;
+var historyLength = 3;
+var xHistory = [];
+var yHistory = [];
+for (var i = 0; i < historyLength; i++) {
+  xHistory.push(windowWidth / 2);
+  yHistory.push(windowHeight / 2);
+}
+
+var average = function(history) {
+  var sum = 0;
+  for (var coord of history) {
+    sum += coord;
+  }
+  return sum / history.length;
+}
 
 /** Handles a message from the web socket. */
 ws.onmessage = function(event) {
   var data = JSON.parse(event.data);
 
-  if (data.width && data.height) {
-    feedHeight = parseInt(data.height);
+  if (!feedWidth && !feedHeight) {
     feedWidth = parseInt(data.width);
+    feedHeight = parseInt(data.height);
     canvasFeedWidthRatio = windowWidth / feedWidth;
     canvasFeedHeightRatio = windowHeight / feedHeight;
     console.log('height: ' + feedHeight + ', width: ' + feedWidth);
-  } else {
-    x0 = x;
-    y0 = y;
-
-    var mX = data.m_x || feedWidth / 2;
-    var mY = data.m_y || feedHeight / 2;
-
-    x = (mX * canvasFeedWidthRatio);
-    y = (mY * canvasFeedHeightRatio);
-    console.log(x + ', ' + y);
   }
+    
+  var mX = data.m_x;
+  var mY = data.m_y;
+
+  var x = xHistory[historyLength - 1];
+  var y = yHistory[historyLength - 1];
+  if (!!mX && !!mY) {
+    // Mirror the feed. May not need this depending on setup
+    // mX = feedWidth - mX;
+    x = (mX * canvasFeedWidthRatio + x) / 2;
+    y = (mY * canvasFeedHeightRatio + y) / 2;
+  }
+
+  xHistory.push(x);
+  yHistory.push(y);
+  xHistory.shift();
+  yHistory.shift();
+
+  console.log(x + ', ' + y);
 };
 
 /** Called in a loop to draw a frame of the animation. */
@@ -78,29 +98,27 @@ var draw = function() {
   context.fillStyle = 'black';
   context.fillRect(0, 0, windowWidth, windowHeight);
 
-  if (!!x && !!y) {
-    xAvg = (x + x0) / 2;
-    yAvg = (y + y0) / 2;
-    // Scale x and y window coordinates to be on a unit square.
-    // xUnit and yUnit are floating point numbers between -1 and 1
-    xUnit = ((2 * xAvg) / windowWidth) - 1;
-    yUnit = ((2 * yAvg) / windowHeight) - 1;
-    var circleCoords = mapSquareToCircle(xUnit, yUnit);
-    xCircle = ((circleCoords[0] + 1) / 2) * windowWidth;
-    yCircle = ((circleCoords[1] + 1) / 2) * windowHeight;
-    // Center the eye
-    var xEye = (xCircle / EYE_SCALE_FACTOR) + xEyeTranslate; 
-    var yEye = (yCircle / EYE_SCALE_FACTOR) + yEyeTranslate; 
-    drawCircle(context, xEye, yEye);
+  xAvg = average(xHistory);
+  yAvg = average(yHistory);
+  // Scale x and y window coordinates to be on a unit square.
+  // xUnit and yUnit are floating point numbers between -1 and 1
+  xUnit = ((2 * xAvg) / windowWidth) - 1;
+  yUnit = ((2 * yAvg) / windowHeight) - 1;
+  var circleCoords = mapSquareToCircle(xUnit, yUnit);
+  xCircle = ((circleCoords[0] + 1) / 2) * windowWidth;
+  yCircle = ((circleCoords[1] + 1) / 2) * windowHeight;
+  // Center the eye
+  var xEye = (xCircle / EYE_SCALE_FACTOR) + xEyeTranslate; 
+  var yEye = (yCircle / EYE_SCALE_FACTOR) + yEyeTranslate; 
+  drawCircle(context, xEye, yEye);
 
-    // Draw an ellipse denoting the boundary of the eyeball
-    context.lineWidth = 2;
-    context.strokeStyle = '#003300';
-    context.beginPath();
-    context.ellipse(xEyeTranslate + eyeWidth / 2, yEyeTranslate + eyeHeight / 2,
-        eyeWidth / 2, eyeHeight / 2, 2 * Math.PI, 0, 2 * Math.PI);
-    context.stroke();
-  }
+  // Draw an ellipse denoting the boundary of the eyeball
+  context.lineWidth = 2;
+  context.strokeStyle = '#003300';
+  context.beginPath();
+  context.ellipse(xEyeTranslate + eyeWidth / 2, yEyeTranslate + eyeHeight / 2,
+      eyeWidth / 2, eyeHeight / 2, 2 * Math.PI, 0, 2 * Math.PI);
+  context.stroke();
 };
 
 (function render() {

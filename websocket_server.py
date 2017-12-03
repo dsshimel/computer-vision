@@ -13,16 +13,15 @@ motion_detector = MotionDetector(None)
 
 class MotionReporterSocket(WebSocket):
   def handleConnected(self):
+    motion_detector.set_socket(self)
     global client
     client = self
-    motion_detector.set_socket(client)
     print('client connected')
 
   def handleClose(self):
-    global clients
-    # clients.remove(self)
-    client = None
     motion_detector.clear_socket()
+    global client
+    client = None
     print('client closed')
 
 def run_server():

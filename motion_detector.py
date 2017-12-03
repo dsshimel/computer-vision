@@ -39,7 +39,6 @@ class MotionDetector:
 
   def set_socket(self, new_socket):
     self.socket = new_socket
-    self.send_message({'height': self.height, 'width': self.width})
 
   def run(self):
     capture = cv2.VideoCapture(0)
@@ -100,7 +99,7 @@ class MotionDetector:
 
         if self.m_x and self.m_y:
           cv2.circle(t_color, (self.m_x, self.m_y), 10, (0, 0, 255), 1)
-        self.send_message({'m_x': self.m_x, 'm_y': self.m_y})
+        self.send_message({'m_x': self.m_x, 'm_y': self.m_y, 'height': self.height, 'width': self.width})
 
         cv2.imshow('Camera stream', t_color)
 
