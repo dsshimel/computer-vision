@@ -2,24 +2,27 @@ from motion_detector import MotionDetector
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 import threading
 import time
+import traceback
 
 # SimpleWebSocketServer: https://github.com/dpallot/simple-websocket-server
 # based on https://www.smashingmagazine.com/2016/02/simple-augmented-reality-with-opencv-a-three-js/#3-websockets-in-both-front-end-and-back-end
 
 client = None
 server = None
+motion_detector = MotionDetector(None)
 
 class MotionReporterSocket(WebSocket):
   def handleConnected(self):
     global client
-    # clients.push(self)
     client = self
+    motion_detector.set_socket(client)
     print('client connected')
 
   def handleClose(self):
     global clients
     # clients.remove(self)
     client = None
+    motion_detector.clear_socket()
     print('client closed')
 
 def run_server():
@@ -41,11 +44,8 @@ try:
     while not client:
       print('waiting for client to connect')
       time.sleep(1)
-
-    print('client connected')
-
-    md = MotionDetector(client)
-    md.run()
+    # This line will block until the webcam feed is closed
+    motion_detector.run()
     client.close()
     client = None
 except Exception as e:

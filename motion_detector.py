@@ -17,11 +17,11 @@ def convert_to_bw(im):
 
 class MotionDetector:
   def __init__(self, socket):
-    self.socket = socket
     self.m_x = None
     self.m_y = None
     self.height = None
     self.width = None
+    self.set_socket(socket)
 
   def read_camera(self, capture, as_bw):
     ret, result = capture.read()
@@ -34,6 +34,13 @@ class MotionDetector:
       message = str(json.dumps(json_object))
       self.socket.sendMessage(message)
 
+  def clear_socket(self):
+    self.socket = None
+
+  def set_socket(self, new_socket):
+    self.socket = new_socket
+    self.send_message({'height': self.height, 'width': self.width})
+
   def run(self):
     capture = cv2.VideoCapture(0)
     if not capture.isOpened():
@@ -42,6 +49,8 @@ class MotionDetector:
       print('Could not open camera on channel 0 or 1')
       exit()
 
+    # Try to capture at 1920x1080, it'll fall back to a lower
+    # resolution if your camera can't support this one.
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1920);
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080);
 
@@ -54,11 +63,9 @@ class MotionDetector:
       ret, image = capture.read()
 
     self.height, self.width, channels = image.shape
-    self.send_message({'height': self.height, 'width': self.width})
     print('height: ' + str(self.height))
     print('width: ' + str(self.width))
     print('channels: ' + str(channels))
-    print('image cell value data type: ' + str(image[0][0].dtype))
 
     t_minus2 = self.read_camera(capture, as_bw=True)
     t_minus1 = self.read_camera(capture, as_bw=True)
@@ -93,7 +100,6 @@ class MotionDetector:
 
         if self.m_x and self.m_y:
           cv2.circle(t_color, (self.m_x, self.m_y), 10, (0, 0, 255), 1)
-
         self.send_message({'m_x': self.m_x, 'm_y': self.m_y})
 
         cv2.imshow('Camera stream', t_color)
