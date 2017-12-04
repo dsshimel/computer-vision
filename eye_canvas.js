@@ -15,13 +15,13 @@ canvas.width = windowWidth;
 canvas.height = windowHeight;
 var context = canvas.getContext('2d');
 
-var drawCircle = function(context, x, y) {
+var drawCircle = function(context, x, y, radius, color, strokeColor) {
   context.beginPath();
-  context.arc(x, y, /* radius= */ 40, 0, 2 * Math.PI, false);
-  context.fillStyle = 'black';
+  context.arc(x, y, radius, 0, 2 * Math.PI, false);
+  context.fillStyle = color;
   context.fill();
-  context.lineWidth = 40;
-  context.strokeStyle = '#FF0000';
+  context.lineWidth = radius / 10;
+  context.strokeStyle = strokeColor || context.fillStyle;
   context.stroke();
 };
 
@@ -104,6 +104,7 @@ var draw = function() {
   // xUnit and yUnit are floating point numbers between -1 and 1
   xUnit = ((2 * xAvg) / windowWidth) - 1;
   yUnit = ((2 * yAvg) / windowHeight) - 1;
+
   var circleCoords = mapSquareToCircle(xUnit, yUnit);
   xCircle = ((circleCoords[0] + 1) / 2) * windowWidth;
   yCircle = ((circleCoords[1] + 1) / 2) * windowHeight;
@@ -111,17 +112,24 @@ var draw = function() {
   var xEye = (xCircle / EYE_SCALE_FACTOR) + xEyeTranslate; 
   var yEye = (yCircle / EYE_SCALE_FACTOR) + yEyeTranslate; 
 
+  var irisRadius = Math.min(eyeWidth, eyeHeight) / 3;
+  var pupilRadius = Math.min(eyeWidth, eyeHeight) / 6;
+
+  var outerEyeWidth = (eyeWidth / 2) + irisRadius;
+  var outerEyeHeight = (eyeHeight / 2) + pupilRadius;
   // Draw an ellipse denoting the boundary of the eyeball
   context.lineWidth = 2;
   context.strokeStyle = '#000000';
   context.beginPath();
   context.ellipse(xEyeTranslate + eyeWidth / 2, yEyeTranslate + eyeHeight / 2,
-      eyeWidth / 2, eyeHeight / 2, 2 * Math.PI, 0, 2 * Math.PI);
+      outerEyeWidth, outerEyeHeight, 2 * Math.PI, 0, 2 * Math.PI);
   context.fillStyle = 'white';
   context.fill();
   context.stroke();
 
-  drawCircle(context, xEye, yEye);
+  // Draw iris, then pupil
+  drawCircle(context, xEye, yEye, irisRadius, 'red', 'yellow');
+  drawCircle(context, xEye, yEye, pupilRadius, 'black');
 };
 
 (function render() {
