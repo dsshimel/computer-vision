@@ -17,10 +17,10 @@ var context = canvas.getContext('2d');
 
 var drawCircle = function(context, x, y) {
   context.beginPath();
-  context.arc(x, y, /* radius= */ 20, 0, 2 * Math.PI, false);
+  context.arc(x, y, /* radius= */ 40, 0, 2 * Math.PI, false);
   context.fillStyle = 'black';
   context.fill();
-  context.lineWidth = 20;
+  context.lineWidth = 40;
   context.strokeStyle = '#FF0000';
   context.stroke();
 };
@@ -110,15 +110,18 @@ var draw = function() {
   // Center the eye
   var xEye = (xCircle / EYE_SCALE_FACTOR) + xEyeTranslate; 
   var yEye = (yCircle / EYE_SCALE_FACTOR) + yEyeTranslate; 
-  drawCircle(context, xEye, yEye);
 
   // Draw an ellipse denoting the boundary of the eyeball
   context.lineWidth = 2;
-  context.strokeStyle = '#003300';
+  context.strokeStyle = '#000000';
   context.beginPath();
   context.ellipse(xEyeTranslate + eyeWidth / 2, yEyeTranslate + eyeHeight / 2,
       eyeWidth / 2, eyeHeight / 2, 2 * Math.PI, 0, 2 * Math.PI);
+  context.fillStyle = 'white';
+  context.fill();
   context.stroke();
+
+  drawCircle(context, xEye, yEye);
 };
 
 (function render() {
