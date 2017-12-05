@@ -1,14 +1,14 @@
 var ws = new WebSocket('ws://localhost:7777');
 
-// Higher values makes eye smaller
-const EYE_SCALE_FACTOR = 2;
-
 var windowWidth = window.innerWidth;
 var windowHeight = window.innerHeight;
-var eyeWidth = windowWidth / EYE_SCALE_FACTOR;
-var eyeHeight = windowHeight / EYE_SCALE_FACTOR;
-var xEyeTranslate = (windowWidth - eyeWidth) / 2;
-var yEyeTranslate = (windowHeight - eyeHeight) / 2;
+var xCenter = windowWidth / 2;
+var yCenter = windowHeight / 2;
+var eyeOuterDiameter = Math.min(windowWidth, windowHeight);
+var xEyeTranslate = (windowWidth - eyeOuterDiameter) / 2;
+var yEyeTranslate = (windowHeight - eyeOuterDiameter) / 2;
+var irisRadius = eyeOuterDiameter / 5;
+var pupilRadius = eyeOuterDiameter / 10;
 
 var canvas = document.getElementById('scene');
 canvas.width = windowWidth;
@@ -20,7 +20,7 @@ var drawCircle = function(context, x, y, radius, color, strokeColor) {
   context.arc(x, y, radius, 0, 2 * Math.PI, false);
   context.fillStyle = color;
   context.fill();
-  context.lineWidth = radius / 10;
+  context.lineWidth = pupilRadius / 12;
   context.strokeStyle = strokeColor || context.fillStyle;
   context.stroke();
 };
@@ -89,8 +89,6 @@ ws.onmessage = function(event) {
   yHistory.push(y);
   xHistory.shift();
   yHistory.shift();
-
-  console.log(x + ', ' + y);
 };
 
 /** Called in a loop to draw a frame of the animation. */
@@ -106,23 +104,18 @@ var draw = function() {
   yUnit = ((2 * yAvg) / windowHeight) - 1;
 
   var circleCoords = mapSquareToCircle(xUnit, yUnit);
-  xCircle = ((circleCoords[0] + 1) / 2) * windowWidth;
-  yCircle = ((circleCoords[1] + 1) / 2) * windowHeight;
+  xCircle = circleCoords[0] * ((eyeOuterDiameter / 2) - irisRadius);
+  yCircle = circleCoords[1] * ((eyeOuterDiameter / 2) - irisRadius);
   // Center the eye
-  var xEye = (xCircle / EYE_SCALE_FACTOR) + xEyeTranslate; 
-  var yEye = (yCircle / EYE_SCALE_FACTOR) + yEyeTranslate; 
+  var xEye = xCircle + xCenter; 
+  var yEye = yCircle + yCenter;
 
-  var irisRadius = Math.min(eyeWidth, eyeHeight) / 3;
-  var pupilRadius = Math.min(eyeWidth, eyeHeight) / 6;
-
-  var outerEyeWidth = (eyeWidth / 2) + irisRadius;
-  var outerEyeHeight = (eyeHeight / 2) + pupilRadius;
-  // Draw an ellipse denoting the boundary of the eyeball
+  // Draw a circle denoting the boundary of the eyeball
   context.lineWidth = 2;
   context.strokeStyle = '#000000';
   context.beginPath();
-  context.ellipse(xEyeTranslate + eyeWidth / 2, yEyeTranslate + eyeHeight / 2,
-      outerEyeWidth, outerEyeHeight, 2 * Math.PI, 0, 2 * Math.PI);
+  context.ellipse(xCenter, yCenter, eyeOuterDiameter / 2, eyeOuterDiameter / 2,
+      2 * Math.PI, 0, 2 * Math.PI);
   context.fillStyle = 'white';
   context.fill();
   context.stroke();
