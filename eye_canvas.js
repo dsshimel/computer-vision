@@ -72,7 +72,7 @@ ws.onmessage = function(event) {
     canvasFeedHeightRatio = windowHeight / feedHeight;
     console.log('height: ' + feedHeight + ', width: ' + feedWidth);
   }
-    
+
   var mX = data.m_x;
   var mY = data.m_y;
 
@@ -107,7 +107,7 @@ var draw = function() {
   xCircle = circleCoords[0] * ((eyeOuterDiameter / 2) - irisRadius);
   yCircle = circleCoords[1] * ((eyeOuterDiameter / 2) - irisRadius);
   // Center the eye
-  var xEye = xCircle + xCenter; 
+  var xEye = xCircle + xCenter;
   var yEye = yCircle + yCenter;
 
   // Draw a circle denoting the boundary of the eyeball
