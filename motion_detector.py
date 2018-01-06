@@ -78,7 +78,7 @@ class MotionDetector:
         k_size = (3, 3)
         blur_result = cv2.blur(diff_result, k_size)
         did_thresh, threshold_result = cv2.threshold(
-            blur_result, thresh=31, maxval=1, type=cv2.THRESH_BINARY)
+            blur_result, thresh=23, maxval=1, type=cv2.THRESH_BINARY)
 
         # Calculate the x and y moments
         # This point is what the eye will look at
@@ -98,7 +98,12 @@ class MotionDetector:
 
         if self.m_x and self.m_y:
           cv2.circle(t_color, (self.m_x, self.m_y), 10, (0, 0, 255), 1)
-        self.send_message({'m_x': self.m_x, 'm_y': self.m_y, 'height': self.height, 'width': self.width})
+        self.send_message({
+          'm_x': self.m_x,
+          'm_y': self.m_y,
+          'height': self.height,
+          'width': self.width
+        })
 
         half_size_img = cv2.resize(t_color, None, fx=0.5, fy=0.5)
         cv2.imshow('Camera stream', half_size_img)
