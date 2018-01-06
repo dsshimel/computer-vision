@@ -53,7 +53,6 @@ class MotionDetector:
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1920);
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080);
 
-    # Example of what is read from the camera
     # 'image' is a np.ndarray
     ret, image = capture.read()
 
@@ -101,7 +100,8 @@ class MotionDetector:
           cv2.circle(t_color, (self.m_x, self.m_y), 10, (0, 0, 255), 1)
         self.send_message({'m_x': self.m_x, 'm_y': self.m_y, 'height': self.height, 'width': self.width})
 
-        cv2.imshow('Camera stream', t_color)
+        half_size_img = cv2.resize(t_color, None, fx=0.5, fy=0.5)
+        cv2.imshow('Camera stream', half_size_img)
 
         t_minus2 = t_minus1
         t_minus1 = t
